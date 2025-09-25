@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ttd-mcp-server": {
+      "command": "node",
+      "args": ["C:\\path\\to\\TTD-MCP\\dist\\index.js"],
+      "env": {
+        "WINDBG_PATH": "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\windbg.exe"
+      }
+    }
+  }
+}
