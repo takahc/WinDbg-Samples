@@ -68,6 +68,7 @@ private:
     void HandleInitialize(const json& request);
     void HandleLaunch(const json& request);
     void HandleAttach(const json& request);
+    void HandleConfigurationDone(const json& request);
     void HandleDisconnect(const json& request);
     void HandleTerminate(const json& request);
     void HandleSetBreakpoints(const json& request);
@@ -75,6 +76,7 @@ private:
     void HandleNext(const json& request);
     void HandleStepIn(const json& request);
     void HandleStepOut(const json& request);
+    void HandleStepBack(const json& request);
     void HandlePause(const json& request);
     void HandleStackTrace(const json& request);
     void HandleScopes(const json& request);
@@ -94,6 +96,7 @@ private:
     std::string m_currentTraceFile;
     bool m_isInitialized = false;
     bool m_isLaunched = false;
+    bool m_stopOnEntry = true;
     int m_nextSequence = 1;
 };
 
@@ -161,6 +164,8 @@ void TtdDapServer::ProcessMessage(const json& message)
             HandleLaunch(message);
         else if (command == "attach")
             HandleAttach(message);
+        else if (command == "configurationDone")
+            HandleConfigurationDone(message);
         else if (command == "disconnect")
             HandleDisconnect(message);
         else if (command == "terminate")
@@ -175,6 +180,8 @@ void TtdDapServer::ProcessMessage(const json& message)
             HandleStepIn(message);
         else if (command == "stepOut")
             HandleStepOut(message);
+        else if (command == "stepBack")
+            HandleStepBack(message);
         else if (command == "pause")
             HandlePause(message);
         else if (command == "stackTrace")
@@ -229,6 +236,7 @@ void TtdDapServer::HandleLaunch(const json& request)
 {
     auto args = request.value("arguments", json::object());
     std::string traceFile = args.value("program", "");
+    m_stopOnEntry = args.value("stopOnEntry", true);
     
     if (traceFile.empty())
     {
@@ -242,6 +250,12 @@ void TtdDapServer::HandleLaunch(const json& request)
         m_isLaunched = true;
         
         SendResponse(request);
+        
+        // If stopOnEntry is true, send a stopped event
+        if (m_stopOnEntry)
+        {
+            SendEvent("stopped", {{"reason", "entry"}, {"threadId", 1}});
+        }
     }
     catch (const std::exception& e)
     {
@@ -288,6 +302,12 @@ void TtdDapServer::LoadTraceFile(const std::string& traceFile)
 void TtdDapServer::HandleAttach(const json& request)
 {
     SendErrorResponse(request, "Attach not supported for TTD traces");
+}
+
+void TtdDapServer::HandleConfigurationDone(const json& request)
+{
+    SendResponse(request);
+    // Configuration is complete, ready for debugging
 }
 
 void TtdDapServer::HandleDisconnect(const json& request)
@@ -348,6 +368,20 @@ void TtdDapServer::HandleStepOut(const json& request)
     HandleNext(request); // For simplicity, treat as next for now
 }
 
+void TtdDapServer::HandleStepBack(const json& request)
+{
+    if (!m_cursor)
+    {
+        SendErrorResponse(request, "No trace loaded");
+        return;
+    }
+    
+    m_cursor->ReplayBackward(StepCount{ 1 });
+    
+    SendResponse(request);
+    SendEvent("stopped", {{"reason", "step"}, {"threadId", 1}});
+}
+
 void TtdDapServer::HandlePause(const json& request)
 {
     SendResponse(request);
@@ -403,28 +437,59 @@ void TtdDapServer::HandleVariables(const json& request)
     
     json variables = json::array();
     
-    // Add register values
+    // Add register values and trace information
     try
     {
-        auto registers = m_cursor->GetCrossPlatformContext();
+        auto position = m_cursor->GetPosition();
+        auto pc = m_cursor->GetProgramCounter();
         
         variables.push_back({
-            {"name", "RIP"},
-            {"value", std::format("0x{:x}", m_cursor->GetProgramCounter())},
+            {"name", "Program Counter"},
+            {"value", std::format("0x{:x}", pc)},
+            {"type", "address"},
             {"variablesReference", 0}
         });
         
         variables.push_back({
             {"name", "Position"},
-            {"value", std::format("{}", m_cursor->GetPosition())},
+            {"value", std::format("{}:{}", position.Sequence, position.Steps)},
+            {"type", "position"},
             {"variablesReference", 0}
         });
+        
+        // Try to get some basic register context
+        try
+        {
+            auto registers = m_cursor->GetCrossPlatformContext();
+            
+            variables.push_back({
+                {"name", "Stack Pointer"},
+                {"value", std::format("0x{:x}", registers.Rsp)},
+                {"type", "address"},
+                {"variablesReference", 0}
+            });
+            
+            variables.push_back({
+                {"name", "RAX"},
+                {"value", std::format("0x{:x}", registers.Rax)},
+                {"type", "register"},
+                {"variablesReference", 0}
+            });
+        }
+        catch (...)
+        {
+            variables.push_back({
+                {"name", "Registers"},
+                {"value", "Error reading register context"},
+                {"variablesReference", 0}
+            });
+        }
     }
     catch (...)
     {
         variables.push_back({
             {"name", "Error"},
-            {"value", "Failed to read registers"},
+            {"value", "Failed to read trace information"},
             {"variablesReference", 0}
         });
     }
