@@ -13,6 +13,18 @@ This MCP server exposes TTD debugging capabilities as MCP tools, allowing AI ass
 - Analyze error patterns
 - Extract trace information
 
+The server acts as a bridge between the powerful TTD analysis capabilities of WinDbg and modern AI-assisted debugging workflows.
+
+## Quick Start
+
+1. **Prerequisites**: Windows 10/11, WinDbg, Node.js 16+
+2. **Install**: `npm install && npm run build`
+3. **Test**: `npm test`
+4. **Configure**: Add to your MCP client configuration
+5. **Use**: Start querying TTD traces through your MCP client
+
+See [INSTALL.md](INSTALL.md) for detailed setup instructions.
+
 ## Installation
 
 ```bash
@@ -88,6 +100,13 @@ These tools are designed to be used by MCP clients. Here are some example querie
 - "Show me memory writes to address 0x7ffb578f1e30"
 - "Navigate to position 306600:5BF and show the call stack"
 - "Analyze all GetLastError patterns in the trace"
+
+## Documentation
+
+- [Installation Guide](INSTALL.md) - Detailed setup instructions for Windows
+- [Basic Usage Examples](examples/basic-usage.md) - Common debugging scenarios
+- [TTDQueries Migration Guide](examples/ttdqueries-migration.md) - For existing TTDQueries users
+- [MCP Configuration Example](examples/mcp-config.json) - Client configuration
 
 ## Requirements
 
