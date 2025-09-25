@@ -1,0 +1,26 @@
+{
+  "name": "ttd-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server providing Time Travel Debugging (TTD) query tools based on TTDQueries functionality",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch & node --watch dist/index.js",
+    "test": "npm run build && node dist/test.js"
+  },
+  "keywords": ["mcp", "ttd", "time-travel-debugging", "windbg", "debugging"],
+  "author": "Microsoft TTD Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "bin": {
+    "ttd-mcp-server": "dist/index.js"
+  }
+}
