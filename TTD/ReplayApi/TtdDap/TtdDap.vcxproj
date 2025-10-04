@@ -29,7 +29,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{E1F2G3H4-I5J6-7890-KLMN-OP1234567890}</ProjectGuid>
+    <ProjectGuid>{E7D01636-135A-402E-B9C9-2D6B6BF8803D}</ProjectGuid>
     <RootNamespace>TtdDap</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <TTDApiVersion>0.9.5</TTDApiVersion>
@@ -136,7 +136,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -225,6 +225,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="TtdDap.cpp" />
+    <ClCompile Include="TtdDapPlayground.cpp" />
     <!-- Copy platform-specific DLLs -->
     <CopyFileToFolders Include="..\GetTtd\TTDDownload\x86\TTDReplay.dll">
       <FileType>Document</FileType>

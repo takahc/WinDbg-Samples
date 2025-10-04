@@ -15,7 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TraceDebugger.cpp">
+    <ClCompile Include="TtdDap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TtdDapPlayground.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -25,6 +28,10 @@
   <ItemGroup>
     <CopyFileToFolders Include="..\GetTtd\TTDDownload\x64\TTDReplay.dll" />
     <CopyFileToFolders Include="..\GetTtd\TTDDownload\x64\TTDReplayCPU.dll" />
+    <CopyFileToFolders Include="..\GetTtd\TTDDownload\x86\TTDReplay.dll" />
+    <CopyFileToFolders Include="..\GetTtd\TTDDownload\x86\TTDReplayCPU.dll" />
+    <CopyFileToFolders Include="..\GetTtd\TTDDownload\ARM64\TTDReplay.dll" />
+    <CopyFileToFolders Include="..\GetTtd\TTDDownload\ARM64\TTDReplayCPU.dll" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\inc\RegisterNameMapping.h">
@@ -36,7 +43,10 @@
     <ClInclude Include="..\inc\Formatters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Parsers.h">
+    <ClInclude Include="DapProtocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

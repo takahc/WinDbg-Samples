@@ -24,6 +24,7 @@ echo msbuild.exe must be on command line. Run this script from a developer promp
 if not exist %~dp0LiveRecorderApiSample\TTDDownload\x64\TTDRecordCPU.dll (
   pushd %~dp0LiveRecorderApiSample
   call Get-Ttd.cmd
+  echo "Checking for TTDRecordCPU.dll in %~dp0LiveRecorderApiSample\TTDDownload\x64"
   if not exist %~dp0LiveRecorderApiSample\TTDDownload\x64\TTDRecordCPU.dll echo Error: LiveRecorderApiSample Get-Ttd.cmd failed& goto :eof
   popd
 )
