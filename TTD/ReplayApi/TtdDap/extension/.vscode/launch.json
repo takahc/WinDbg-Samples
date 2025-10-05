@@ -10,8 +10,9 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+				"${workspaceFolder}/sampleWorkspace/MyApp",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--disable-extensions"
+				"--profile=ttd-dap-dev"
 			],
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"

@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe",
+            "args": [
+                "/property:GenerateFullPaths=true",
+                "/property:Configuration=Debug",
+                "/t:build",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$msCompile"
+        },
+
+        {
+            "label": "Create trace file(TTD)",
+            "type": "shell",
+            "command": "powershell -Command \"Start-Process 'C:\\Users\\vanch\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.WinDbg_8wekyb3d8bbwe\\amd64\\TTD\\TTD.exe' -Verb runAs -ArgumentList '${workspaceFolder}\\x64\\Debug\\MyApp.exe','-out','${workspaceFolder}\\x64\\Debug'\"",
+            "args": [],
+            
+        }
+    ]
+}
