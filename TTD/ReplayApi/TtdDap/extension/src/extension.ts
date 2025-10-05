@@ -1,26 +1,54 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { TtdDebugAdapterDescriptorFactory } from './ttdDebugAdapter';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    console.log('TTD DAP Debugger extension is now active!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "ttd-dap" is now active!');
+    // Register the debug adapter
+    const factory = new TtdDebugAdapterDescriptorFactory();
+    context.subscriptions.push(
+        vscode.debug.registerDebugAdapterDescriptorFactory('ttd', factory)
+    );
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('ttd-dap.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from ttd-dap!');
-	});
-
-	context.subscriptions.push(disposable);
+    // Register configuration provider
+    const provider = new TtdConfigurationProvider();
+    context.subscriptions.push(
+        vscode.debug.registerDebugConfigurationProvider('ttd', provider)
+    );
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+    console.log('TTD DAP Debugger extension is now deactivated!');
+}
+
+class TtdConfigurationProvider implements vscode.DebugConfigurationProvider {
+    /**
+     * Massage a debug configuration just before a debug session is being launched,
+     * e.g. add all missing attributes, substitute variables, or add default values.
+     */
+    resolveDebugConfiguration(
+        folder: vscode.WorkspaceFolder | undefined,
+        config: vscode.DebugConfiguration,
+        token?: vscode.CancellationToken
+    ): vscode.ProviderResult<vscode.DebugConfiguration> {
+        // If launch.json is missing or empty
+        if (!config.type && !config.request && !config.name) {
+            const editor = vscode.window.activeTextEditor;
+            if (editor && editor.document.languageId === 'cpp') {
+                config.type = 'ttd';
+                config.name = 'Debug TTD Trace';
+                config.request = 'launch';
+                config.program = '${workspaceFolder}/trace.run';
+                config.stopOnEntry = true;
+            }
+        }
+
+        if (!config.program) {
+            return vscode.window.showInformationMessage("Cannot find a program to debug").then((_: any) => {
+                return undefined;  // abort launch
+            });
+        }
+
+        return config;
+    }
+}

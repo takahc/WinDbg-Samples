@@ -7,15 +7,82 @@
     "vscode": "^1.104.0"
   },
   "categories": [
-    "Other"
+    "Debuggers"
   ],
-  "activationEvents": [],
+  "keywords": [
+    "ttd",
+    "time travel debugging",
+    "debug",
+    "windbg",
+    "trace",
+    "replay"
+  ],
+  "activationEvents": [
+    "onDebugResolve:ttd"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
+    "breakpoints": [
       {
-        "command": "ttd-dap.helloWorld",
-        "title": "Hello World"
+        "language": "cpp"
+      },
+      {
+        "language": "c"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "ttd",
+        "label": "TTD Debug",
+        "program": "D:/prog/WinDbg-Samples/TTD/ReplayApi/TtdDap/out/x64-Debug/TtdDap.exe",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to TTD trace file (.run)",
+                "default": "${workspaceFolder}/"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after launch",
+                "default": true
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory",
+                "default": "${workspaceFolder}"
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "name": "Debug TTD Trace",
+            "type": "ttd",
+            "request": "launch",
+            "program": "${workspaceFolder}/trace.run",
+            "stopOnEntry": true,
+            "cwd": "${workspaceFolder}"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "TTD: Launch",
+            "description": "A new configuration for debugging a TTD trace file",
+            "body": {
+              "name": "Debug TTD Trace",
+              "type": "ttd",
+              "request": "launch",
+              "program": "^\"\\${workspaceFolder}/trace.run\"",
+              "stopOnEntry": true,
+              "cwd": "^\"\\${workspaceFolder}\""
+            }
+          }
+        ]
       }
     ]
   },
