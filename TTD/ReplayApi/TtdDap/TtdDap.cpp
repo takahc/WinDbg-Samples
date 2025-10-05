@@ -25,6 +25,7 @@
 #include <charconv>
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -34,6 +35,9 @@
 #include <thread>
 #include <variant>
 #include <stdexcept>
+#include <chrono>
+#include <iomanip>
+
 
 // JSON library - we'll use a simple JSON implementation
 #include "json.hpp"
@@ -42,6 +46,7 @@
 using namespace TTD;
 using namespace Replay;
 using json = nlohmann::json;
+
 
 // Simple error reporting class that prints errors to the console
 class BasicErrorReporting : public ErrorReporting
@@ -57,6 +62,77 @@ public:
 
         std::cout << std::format("Error: {}\n", buffer);
     }
+};
+
+// File logger class for debugging and tracing DAP communication
+class FileLogger
+{
+public:
+    FileLogger(const std::string& logFilePath) : m_logFilePath(logFilePath)
+    {
+        m_logFile.open(m_logFilePath, std::ios::out | std::ios::app);
+        if (m_logFile.is_open())
+        {
+            LogInfo("=== TTD DAP Server Started ===");
+        }
+    }
+
+    ~FileLogger()
+    {
+        if (m_logFile.is_open())
+        {
+            LogInfo("=== TTD DAP Server Stopped ===");
+            m_logFile.close();
+        }
+    }
+
+    void LogInfo(const std::string& message)
+    {
+        LogMessage("INFO", message);
+    }
+
+    void LogError(const std::string& message)
+    {
+        LogMessage("ERROR", message);
+    }
+
+    void LogDebug(const std::string& message)
+    {
+        LogMessage("DEBUG", message);
+    }
+
+    void LogMessage(const std::string& level, const std::string& message)
+    {
+        if (!m_logFile.is_open())
+            return;
+
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+        std::tm tm;
+        localtime_s(&tm, &time_t);
+
+        m_logFile << std::format("[{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}] [{}] {}\n",
+            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+            tm.tm_hour, tm.tm_min, tm.tm_sec, ms.count(),
+            level, message);
+        
+        m_logFile.flush();
+    }
+
+    void LogJsonMessage(const std::string& direction, const json& message)
+    {
+        if (!m_logFile.is_open())
+            return;
+
+        std::string messageStr = message.dump(2); // Pretty print with 2-space indent
+        LogMessage("JSON", std::format("{}: {}", direction, messageStr));
+    }
+
+private:
+    std::string m_logFilePath;
+    std::ofstream m_logFile;
 };
 class TtdDapServer
 {
@@ -104,18 +180,42 @@ private:
     bool m_isLaunched = false;
     bool m_stopOnEntry = true;
     int m_nextSequence = 1;
+
+    // Logger
+    std::unique_ptr<FileLogger> m_logger;
 };
 
 TtdDapServer::TtdDapServer()
 {
+    // Initialize logger with timestamp in filename
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm tm;
+    localtime_s(&tm, &time_t);
+    
+    std::string logFileName = std::format("ttd_dap_{:04}{:02}{:02}_{:02}{:02}{:02}.log",
+        tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+        tm.tm_hour, tm.tm_min, tm.tm_sec);
+    
+    m_logger = std::make_unique<FileLogger>(logFileName);
+    m_logger->LogInfo("TtdDapServer constructed");
 }
 
 TtdDapServer::~TtdDapServer()
 {
+    if (m_logger)
+    {
+        m_logger->LogInfo("TtdDapServer destroyed");
+    }
 }
 
 int TtdDapServer::Run()
 {
+    if (m_logger)
+    {
+        m_logger->LogInfo("DAP server started, waiting for messages...");
+    }
+
     std::string line;
 
     while (std::getline(std::cin, line))
@@ -143,11 +243,19 @@ int TtdDapServer::Run()
                 try
                 {
                     json message = json::parse(jsonContent);
+                    if (m_logger)
+                    {
+                        m_logger->LogJsonMessage("RECEIVED", message);
+                    }
                     ProcessMessage(message);
                 }
                 catch (const std::exception& e)
                 {
                     std::cerr << "JSON parse error: " << e.what() << std::endl;
+                    if (m_logger)
+                    {
+                        m_logger->LogError(std::format("JSON parse error: {}", e.what()));
+                    }
                 }
             }
         }
@@ -159,6 +267,12 @@ int TtdDapServer::Run()
 void TtdDapServer::ProcessMessage(const json& message)
 {
     std::string type = message.value("type", "");
+    
+    if (m_logger)
+    {
+        std::string command = message.value("command", "unknown");
+        m_logger->LogDebug(std::format("Processing message type: {}, command: {}", type, command));
+    }
 
     if (type == "request")
     {
@@ -209,12 +323,33 @@ void TtdDapServer::ProcessMessage(const json& message)
 
 void TtdDapServer::SendMessage(const json& message)
 {
+    if (m_logger)
+    {
+        m_logger->LogJsonMessage("SENT", message);
+    }
+    
     std::string content = message.dump();
-    std::cout << "Content-Length: " << content.length() << "\r\n\r\n" << content << std::flush;
+    std::string raw = "Content-Length: " + std::to_string(content.length()) + "\r\n\r\n" + content;
+    // std::cout << "Content-Length: " << content.length() << "\r\n\r\n" << content << std::flush;
+    
+    //printf("%s", raw.c_str());
+    //fflush(stdout);
+    
+    std::cout << raw << std::flush;
+
+    //if(m_logger)
+    //{
+    //    m_logger->LogDebug(raw);
+    //}
 }
 
 void TtdDapServer::HandleInitialize(const json& request)
 {
+    if (m_logger)
+    {
+        m_logger->LogInfo("Handling Initialize request");
+    }
+
     json response = {
         {"seq", m_nextSequence++},
         {"type", "response"},
@@ -225,8 +360,8 @@ void TtdDapServer::HandleInitialize(const json& request)
             {"supportsConfigurationDoneRequest", true},
             {"supportsEvaluateForHovers", true},
             {"supportsStepBack", true},
-            {"supportsGotoTargetsRequest", false},
-            {"supportsCompletionsRequest", false}
+            //{"supportsGotoTargetsRequest", false},
+            //{"supportsCompletionsRequest", false}
         }}
     };
 
