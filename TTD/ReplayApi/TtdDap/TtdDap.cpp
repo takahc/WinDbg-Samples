@@ -38,6 +38,10 @@
 #include <chrono>
 #include <iomanip>
 
+#include <io.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
 
 // JSON library - we'll use a simple JSON implementation
 #include "json.hpp"
@@ -704,6 +708,8 @@ void TtdDapServer::SendEvent(const std::string& event, const json& body)
 
 int main(int argc, char* argv[])
 {
+    _setmode(_fileno(stdout), _O_BINARY);
+
     try
     {
         TtdDapServer server;
