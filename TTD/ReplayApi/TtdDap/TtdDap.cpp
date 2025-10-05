@@ -51,14 +51,13 @@ using namespace TTD;
 using namespace Replay;
 using json = nlohmann::json;
 
-
 // Simple error reporting class that prints errors to the console
 class BasicErrorReporting : public ErrorReporting
 {
 public:
     BasicErrorReporting() = default;
 
-    void __fastcall VPrintError(_Printf_format_string_ char const* const pFmt, _In_ va_list argList) override
+    void __fastcall VPrintError(_Printf_format_string_ char const *const pFmt, _In_ va_list argList) override
     {
         char buffer[2048];
 
@@ -72,7 +71,7 @@ public:
 class FileLogger
 {
 public:
-    FileLogger(const std::string& logFilePath) : m_logFilePath(logFilePath)
+    FileLogger(const std::string &logFilePath) : m_logFilePath(logFilePath)
     {
         m_logFile.open(m_logFilePath, std::ios::out | std::ios::app);
         if (m_logFile.is_open())
@@ -90,22 +89,22 @@ public:
         }
     }
 
-    void LogInfo(const std::string& message)
+    void LogInfo(const std::string &message)
     {
         LogMessage("INFO", message);
     }
 
-    void LogError(const std::string& message)
+    void LogError(const std::string &message)
     {
         LogMessage("ERROR", message);
     }
 
-    void LogDebug(const std::string& message)
+    void LogDebug(const std::string &message)
     {
         LogMessage("DEBUG", message);
     }
 
-    void LogMessage(const std::string& level, const std::string& message)
+    void LogMessage(const std::string &level, const std::string &message)
     {
         if (!m_logFile.is_open())
             return;
@@ -118,14 +117,14 @@ public:
         localtime_s(&tm, &time_t);
 
         m_logFile << std::format("[{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}] [{}] {}\n",
-            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-            tm.tm_hour, tm.tm_min, tm.tm_sec, ms.count(),
-            level, message);
-        
+                                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                                 tm.tm_hour, tm.tm_min, tm.tm_sec, ms.count(),
+                                 level, message);
+
         m_logFile.flush();
     }
 
-    void LogJsonMessage(const std::string& direction, const json& message)
+    void LogJsonMessage(const std::string &direction, const json &message)
     {
         if (!m_logFile.is_open())
             return;
@@ -147,34 +146,34 @@ public:
     int Run();
 
 private:
-    void ProcessMessage(const json& message);
-    void SendMessage(const json& message);
+    void ProcessMessage(const json &message);
+    void SendMessage(const json &message);
 
     // DAP request handlers
-    void HandleInitialize(const json& request);
-    void HandleLaunch(const json& request);
-    void HandleAttach(const json& request);
-    void HandleConfigurationDone(const json& request);
-    void HandleDisconnect(const json& request);
-    void HandleTerminate(const json& request);
-    void HandleSetBreakpoints(const json& request);
-    void HandleContinue(const json& request);
-    void HandleNext(const json& request);
-    void HandleStepIn(const json& request);
-    void HandleStepOut(const json& request);
-    void HandleStepBack(const json& request);
-    void HandlePause(const json& request);
-    void HandleStackTrace(const json& request);
-    void HandleScopes(const json& request);
-    void HandleVariables(const json& request);
-    void HandleEvaluate(const json& request);
-    void HandleThreads(const json& request);
+    void HandleInitialize(const json &request);
+    void HandleLaunch(const json &request);
+    void HandleAttach(const json &request);
+    void HandleConfigurationDone(const json &request);
+    void HandleDisconnect(const json &request);
+    void HandleTerminate(const json &request);
+    void HandleSetBreakpoints(const json &request);
+    void HandleContinue(const json &request);
+    void HandleNext(const json &request);
+    void HandleStepIn(const json &request);
+    void HandleStepOut(const json &request);
+    void HandleStepBack(const json &request);
+    void HandlePause(const json &request);
+    void HandleStackTrace(const json &request);
+    void HandleScopes(const json &request);
+    void HandleVariables(const json &request);
+    void HandleEvaluate(const json &request);
+    void HandleThreads(const json &request);
 
     // Helper methods
-    void SendResponse(const json& request, const json& body = nullptr);
-    void SendErrorResponse(const json& request, const std::string& message);
-    void SendEvent(const std::string& event, const json& body = nullptr);
-    void LoadTraceFile(const std::string& traceFile);
+    void SendResponse(const json &request, const json &body = nullptr);
+    void SendErrorResponse(const json &request, const std::string &message);
+    void SendEvent(const std::string &event, const json &body = nullptr);
+    void LoadTraceFile(const std::string &traceFile);
 
     // TTD state
     UniqueReplayEngine m_replayEngine;
@@ -196,11 +195,11 @@ TtdDapServer::TtdDapServer()
     auto time_t = std::chrono::system_clock::to_time_t(now);
     std::tm tm;
     localtime_s(&tm, &time_t);
-    
+
     std::string logFileName = std::format("ttd_dap_{:04}{:02}{:02}_{:02}{:02}{:02}.log",
-        tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-        tm.tm_hour, tm.tm_min, tm.tm_sec);
-    
+                                          tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                                          tm.tm_hour, tm.tm_min, tm.tm_sec);
+
     m_logger = std::make_unique<FileLogger>(logFileName);
     m_logger->LogInfo("TtdDapServer constructed");
 }
@@ -253,7 +252,7 @@ int TtdDapServer::Run()
                     }
                     ProcessMessage(message);
                 }
-                catch (const std::exception& e)
+                catch (const std::exception &e)
                 {
                     std::cerr << "JSON parse error: " << e.what() << std::endl;
                     if (m_logger)
@@ -268,10 +267,10 @@ int TtdDapServer::Run()
     return 0;
 }
 
-void TtdDapServer::ProcessMessage(const json& message)
+void TtdDapServer::ProcessMessage(const json &message)
 {
     std::string type = message.value("type", "");
-    
+
     if (m_logger)
     {
         std::string command = message.value("command", "unknown");
@@ -325,29 +324,29 @@ void TtdDapServer::ProcessMessage(const json& message)
     }
 }
 
-void TtdDapServer::SendMessage(const json& message)
+void TtdDapServer::SendMessage(const json &message)
 {
     if (m_logger)
     {
         m_logger->LogJsonMessage("SENT", message);
     }
-    
+
     std::string content = message.dump();
     std::string raw = "Content-Length: " + std::to_string(content.length()) + "\r\n\r\n" + content;
     // std::cout << "Content-Length: " << content.length() << "\r\n\r\n" << content << std::flush;
-    
-    //printf("%s", raw.c_str());
-    //fflush(stdout);
-    
+
+    // printf("%s", raw.c_str());
+    // fflush(stdout);
+
     std::cout << raw << std::flush;
 
-    //if(m_logger)
+    // if(m_logger)
     //{
-    //    m_logger->LogDebug(raw);
-    //}
+    //     m_logger->LogDebug(raw);
+    // }
 }
 
-void TtdDapServer::HandleInitialize(const json& request)
+void TtdDapServer::HandleInitialize(const json &request)
 {
     if (m_logger)
     {
@@ -361,13 +360,10 @@ void TtdDapServer::HandleInitialize(const json& request)
         {"success", true},
         {"command", "initialize"},
         {"body", {
-            {"supportsConfigurationDoneRequest", true},
-            {"supportsEvaluateForHovers", true},
-            {"supportsStepBack", true},
-            //{"supportsGotoTargetsRequest", false},
-            //{"supportsCompletionsRequest", false}
-        }}
-    };
+                     {"supportsConfigurationDoneRequest", true}, {"supportsEvaluateForHovers", true}, {"supportsStepBack", true},
+                     //{"supportsGotoTargetsRequest", false},
+                     //{"supportsCompletionsRequest", false}
+                 }}};
 
     SendMessage(response);
 
@@ -377,7 +373,7 @@ void TtdDapServer::HandleInitialize(const json& request)
     SendEvent("initialized");
 }
 
-void TtdDapServer::HandleLaunch(const json& request)
+void TtdDapServer::HandleLaunch(const json &request)
 {
     auto args = request.value("arguments", json::object());
     std::string traceFile = args.value("program", "");
@@ -399,16 +395,16 @@ void TtdDapServer::HandleLaunch(const json& request)
         // If stopOnEntry is true, send a stopped event
         if (m_stopOnEntry)
         {
-            SendEvent("stopped", { {"reason", "entry"}, {"threadId", 1} });
+            SendEvent("stopped", {{"reason", "entry"}, {"threadId", 1}});
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         SendErrorResponse(request, std::format("Failed to load trace file: {}", e.what()));
     }
 }
 
-void TtdDapServer::LoadTraceFile(const std::string& traceFile)
+void TtdDapServer::LoadTraceFile(const std::string &traceFile)
 {
     // Create replay engine
     auto [pOwnedReplayEngine, createResult] = TTD::Replay::MakeReplayEngine();
@@ -425,14 +421,14 @@ void TtdDapServer::LoadTraceFile(const std::string& traceFile)
 
     // Load trace file
     std::wstring wideTraceFile(traceFile.begin(), traceFile.end());
-    HRESULT hr = m_replayEngine->Initialize (wideTraceFile.c_str());
+    HRESULT hr = m_replayEngine->Initialize(wideTraceFile.c_str());
     if (FAILED(hr))
     {
         throw std::runtime_error(std::format("Failed to open trace file: 0x{:x}", hr));
     }
 
     // Create cursor
-    m_cursor = TTD::Replay::UniqueCursor{ m_replayEngine->NewCursor() };
+    m_cursor = TTD::Replay::UniqueCursor{m_replayEngine->NewCursor()};
     if (!m_cursor)
     {
         throw std::runtime_error("Failed to create cursor");
@@ -444,37 +440,37 @@ void TtdDapServer::LoadTraceFile(const std::string& traceFile)
     m_currentTraceFile = traceFile;
 }
 
-void TtdDapServer::HandleAttach(const json& request)
+void TtdDapServer::HandleAttach(const json &request)
 {
     SendErrorResponse(request, "Attach not supported for TTD traces");
 }
 
-void TtdDapServer::HandleConfigurationDone(const json& request)
+void TtdDapServer::HandleConfigurationDone(const json &request)
 {
     SendResponse(request);
     // Configuration is complete, ready for debugging
 }
 
-void TtdDapServer::HandleDisconnect(const json& request)
+void TtdDapServer::HandleDisconnect(const json &request)
 {
     SendResponse(request);
     exit(0);
 }
 
-void TtdDapServer::HandleTerminate(const json& request)
+void TtdDapServer::HandleTerminate(const json &request)
 {
     SendResponse(request);
     exit(0);
 }
 
-void TtdDapServer::HandleSetBreakpoints(const json& request)
+void TtdDapServer::HandleSetBreakpoints(const json &request)
 {
     // For now, just acknowledge breakpoints without setting them
     // TODO: Implement actual breakpoint support
-    SendResponse(request, { {"breakpoints", json::array()} });
+    SendResponse(request, {{"breakpoints", json::array()}});
 }
 
-void TtdDapServer::HandleContinue(const json& request)
+void TtdDapServer::HandleContinue(const json &request)
 {
     if (!m_cursor)
     {
@@ -485,11 +481,11 @@ void TtdDapServer::HandleContinue(const json& request)
     // For TTD, continue means step to the end
     m_cursor->SetPosition(Position::Max);
 
-    SendResponse(request, { {"allThreadsContinued", true} });
-    SendEvent("stopped", { {"reason", "end"}, {"threadId", 1} });
+    SendResponse(request, {{"allThreadsContinued", true}});
+    SendEvent("stopped", {{"reason", "end"}, {"threadId", 1}});
 }
 
-void TtdDapServer::HandleNext(const json& request)
+void TtdDapServer::HandleNext(const json &request)
 {
     if (!m_cursor)
     {
@@ -497,23 +493,23 @@ void TtdDapServer::HandleNext(const json& request)
         return;
     }
 
-    m_cursor->ReplayForward(StepCount{ 1 });
+    m_cursor->ReplayForward(StepCount{1});
 
     SendResponse(request);
-    SendEvent("stopped", { {"reason", "step"}, {"threadId", 1} });
+    SendEvent("stopped", {{"reason", "step"}, {"threadId", 1}});
 }
 
-void TtdDapServer::HandleStepIn(const json& request)
+void TtdDapServer::HandleStepIn(const json &request)
 {
     HandleNext(request); // For simplicity, treat as next for now
 }
 
-void TtdDapServer::HandleStepOut(const json& request)
+void TtdDapServer::HandleStepOut(const json &request)
 {
     HandleNext(request); // For simplicity, treat as next for now
 }
 
-void TtdDapServer::HandleStepBack(const json& request)
+void TtdDapServer::HandleStepBack(const json &request)
 {
     if (!m_cursor)
     {
@@ -521,19 +517,19 @@ void TtdDapServer::HandleStepBack(const json& request)
         return;
     }
 
-    m_cursor->ReplayBackward(StepCount{ 1 });
+    m_cursor->ReplayBackward(StepCount{1});
 
     SendResponse(request);
-    SendEvent("stopped", { {"reason", "step"}, {"threadId", 1} });
+    SendEvent("stopped", {{"reason", "step"}, {"threadId", 1}});
 }
 
-void TtdDapServer::HandlePause(const json& request)
+void TtdDapServer::HandlePause(const json &request)
 {
     SendResponse(request);
-    SendEvent("stopped", { {"reason", "pause"}, {"threadId", 1} });
+    SendEvent("stopped", {{"reason", "pause"}, {"threadId", 1}});
 }
 
-void TtdDapServer::HandleStackTrace(const json& request)
+void TtdDapServer::HandleStackTrace(const json &request)
 {
     if (!m_cursor)
     {
@@ -546,33 +542,27 @@ void TtdDapServer::HandleStackTrace(const json& request)
     auto pc = m_cursor->GetProgramCounter();
 
     json stackFrames = json::array();
-    stackFrames.push_back({
-        {"id", 1},
-        {"name", "main"},
-        {"source", {{"name", "trace"}, {"path", m_currentTraceFile}}},
-        {"line", 1},
-        {"column", 1}
-        });
+    stackFrames.push_back({{"id", 1},
+                           {"name", "main"},
+                           {"source", {{"name", "trace"}, {"path", m_currentTraceFile}}},
+                           {"line", 1},
+                           {"column", 1}});
 
-    SendResponse(request, {
-        {"stackFrames", stackFrames},
-        {"totalFrames", 1}
-        });
+    SendResponse(request, {{"stackFrames", stackFrames},
+                           {"totalFrames", 1}});
 }
 
-void TtdDapServer::HandleScopes(const json& request)
+void TtdDapServer::HandleScopes(const json &request)
 {
     json scopes = json::array();
-    scopes.push_back({
-        {"name", "Registers"},
-        {"variablesReference", 1},
-        {"expensive", false}
-        });
+    scopes.push_back({{"name", "Registers"},
+                      {"variablesReference", 1},
+                      {"expensive", false}});
 
-    SendResponse(request, { {"scopes", scopes} });
+    SendResponse(request, {{"scopes", scopes}});
 }
 
-void TtdDapServer::HandleVariables(const json& request)
+void TtdDapServer::HandleVariables(const json &request)
 {
     if (!m_cursor)
     {
@@ -588,85 +578,70 @@ void TtdDapServer::HandleVariables(const json& request)
         auto position = m_cursor->GetPosition();
         auto pc = m_cursor->GetProgramCounter();
 
-        variables.push_back({
-            {"name", "Program Counter"},
-            {"value", std::format("0x{:x}", pc)},
-            {"type", "address"},
-            {"variablesReference", 0}
-            });
+        variables.push_back({{"name", "Program Counter"},
+                             {"value", std::format("0x{:x}", pc)},
+                             {"type", "address"},
+                             {"variablesReference", 0}});
 
-        variables.push_back({
-            {"name", "Position"},
-            {"value", std::format("{}:{}", position.Sequence, position.Steps)},
-            {"type", "position"},
-            {"variablesReference", 0}
-            });
+        variables.push_back({{"name", "Position"},
+                             {"value", std::format("{}:{}", position.Sequence, position.Steps)},
+                             {"type", "position"},
+                             {"variablesReference", 0}});
 
         // Try to get some basic register context
         try
         {
             auto registers = m_cursor->GetCrossPlatformContext();
 
-            variables.push_back({
-                {"name", "Stack Pointer"},
-                {"value", std::format("0x{:x}", m_cursor->GetStackPointer())},
-                {"type", "address"},
-                {"variablesReference", 0}
-                });
+            variables.push_back({{"name", "Stack Pointer"},
+                                 {"value", std::format("0x{:x}", m_cursor->GetStackPointer())},
+                                 {"type", "address"},
+                                 {"variablesReference", 0}});
 
-            variables.push_back({
-                {"name", "RAX"},
-                {"value", std::format("0x{:x}", 999)}, //TODO
-                {"type", "register"},
-                {"variablesReference", 0}
-                });
+            variables.push_back({{"name", "RAX"},
+                                 {"value", std::format("0x{:x}", 999)}, // TODO
+                                 {"type", "register"},
+                                 {"variablesReference", 0}});
         }
         catch (...)
         {
-            variables.push_back({
-                {"name", "Registers"},
-                {"value", "Error reading register context"},
-                {"variablesReference", 0}
-                });
+            variables.push_back({{"name", "Registers"},
+                                 {"value", "Error reading register context"},
+                                 {"variablesReference", 0}});
         }
     }
     catch (...)
     {
-        variables.push_back({
-            {"name", "Error"},
-            {"value", "Failed to read trace information"},
-            {"variablesReference", 0}
-            });
+        variables.push_back({{"name", "Error"},
+                             {"value", "Failed to read trace information"},
+                             {"variablesReference", 0}});
     }
 
-    SendResponse(request, { {"variables", variables} });
+    SendResponse(request, {{"variables", variables}});
 }
 
-void TtdDapServer::HandleEvaluate(const json& request)
+void TtdDapServer::HandleEvaluate(const json &request)
 {
     SendErrorResponse(request, "Expression evaluation not yet implemented");
 }
 
-void TtdDapServer::HandleThreads(const json& request)
+void TtdDapServer::HandleThreads(const json &request)
 {
     json threads = json::array();
-    threads.push_back({
-        {"id", 1},
-        {"name", "Main Thread"}
-        });
+    threads.push_back({{"id", 1},
+                       {"name", "Main Thread"}});
 
-    SendResponse(request, { {"threads", threads} });
+    SendResponse(request, {{"threads", threads}});
 }
 
-void TtdDapServer::SendResponse(const json& request, const json& body)
+void TtdDapServer::SendResponse(const json &request, const json &body)
 {
     json response = {
         {"seq", m_nextSequence++},
         {"type", "response"},
         {"request_seq", request["seq"]},
         {"success", true},
-        {"command", request["command"]}
-    };
+        {"command", request["command"]}};
 
     if (body.is_object() || body.is_array())
     {
@@ -676,7 +651,7 @@ void TtdDapServer::SendResponse(const json& request, const json& body)
     SendMessage(response);
 }
 
-void TtdDapServer::SendErrorResponse(const json& request, const std::string& message)
+void TtdDapServer::SendErrorResponse(const json &request, const std::string &message)
 {
     json response = {
         {"seq", m_nextSequence++},
@@ -684,19 +659,17 @@ void TtdDapServer::SendErrorResponse(const json& request, const std::string& mes
         {"request_seq", request["seq"]},
         {"success", false},
         {"command", request["command"]},
-        {"message", message}
-    };
+        {"message", message}};
 
     SendMessage(response);
 }
 
-void TtdDapServer::SendEvent(const std::string& event, const json& body)
+void TtdDapServer::SendEvent(const std::string &event, const json &body)
 {
     json eventMsg = {
         {"seq", m_nextSequence++},
         {"type", "event"},
-        {"event", event}
-    };
+        {"event", event}};
 
     if (body.is_object() || body.is_array())
     {
@@ -706,7 +679,7 @@ void TtdDapServer::SendEvent(const std::string& event, const json& body)
     SendMessage(eventMsg);
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     _setmode(_fileno(stdout), _O_BINARY);
 
@@ -715,10 +688,9 @@ int main(int argc, char* argv[])
         TtdDapServer server;
         return server.Run();
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << "Fatal error: " << e.what() << std::endl;
         return 1;
     }
 }
-
